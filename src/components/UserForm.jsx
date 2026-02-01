@@ -15,8 +15,9 @@ export default function UserForm() {
     }
 
     return (
-        <form>
+        <form className="c-form" onSubmit={handleSubmit}>
             <input
+                className="c-form__input"
                 type={"text"}
                 id={"name"}
                 placeholder={"Enter your name"}
@@ -24,7 +25,7 @@ export default function UserForm() {
                 onChange={(e) => setInputName(e.target.value)}
                 required
             />
-            <button type={"submit"} onClick={inputName ? handleSubmit : null}>Start Quiz</button>
+            <button className="c-btn" type={"submit"} disabled={!inputName}>Start Quiz</button>
         </form>
     )
 }
