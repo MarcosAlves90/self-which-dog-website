@@ -215,12 +215,24 @@ function App() {
 
     // Breed selection and RNG are provided by shared implementations in `./utils/breedUtils` to avoid duplication
 
+    function computeTraitsFromAnswers(nextAnswers) {
+        let nextTraits = initialTraits;
+        for (let i = 0; i < questions.length; i += 1) {
+            const answerIndex = nextAnswers[i];
+            if (typeof answerIndex !== "number") continue;
+            const option = questions[i].options[answerIndex];
+            if (!option) continue;
+            nextTraits = applyDelta(nextTraits, option.delta);
+        }
+        return nextTraits;
+    }
+
     function handleAnswer(optionIndex) {
-        const q = questions[currentQuestionIndex];
-        const option = q.options[optionIndex];
-        const updatedTraits = applyDelta(traits, option.delta);
+        const nextAnswers = [...answers];
+        nextAnswers[currentQuestionIndex] = optionIndex;
+        const updatedTraits = computeTraitsFromAnswers(nextAnswers);
         setTraits(updatedTraits);
-        setAnswers([...answers, option.label]);
+        setAnswers(nextAnswers);
 
         const nextIndex = currentQuestionIndex + 1;
         setCurrentQuestionIndex(nextIndex);
@@ -228,7 +240,9 @@ function App() {
         if (nextIndex === questions.length) {
                     // Build a lightweight seed so results can be reproducible per user/session
             const seedBase = sessionStorage.getItem('userName') || ''; 
-            const seedArgs = [...answers, option.label].join('|');
+            const seedArgs = nextAnswers
+                .map((answerIndex, qIndex) => questions[qIndex]?.options[answerIndex]?.label || '')
+                .join('|');
             const seed = seedBase + '|' + seedArgs;
 
             const selectedBreed = determineBreedFromTraits(updatedTraits, seed);
@@ -237,6 +251,17 @@ function App() {
             const apiName = breeds[selectedBreed]?.api || selectedBreed.toLowerCase().replace(/ /g, '-');
             fetchArtworkByApi(apiName);
         }
+    }
+
+    function handlePrevQuestion() {
+        if (currentQuestionIndex <= 0) return;
+        setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+
+    function handleNextQuestion() {
+        if (currentQuestionIndex >= questions.length - 1) return;
+        if (typeof answers[currentQuestionIndex] !== "number") return;
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
 
     function restartQuiz() {
@@ -270,6 +295,11 @@ function App() {
                             question={questions[currentQuestionIndex].question}
                             options={questions[currentQuestionIndex].options}
                             onAnswer={handleAnswer}
+                            onPrev={handlePrevQuestion}
+                            onNext={handleNextQuestion}
+                            canGoNext={typeof answers[currentQuestionIndex] === "number"}
+                            hasPrev={currentQuestionIndex > 0}
+                            currentAnswerIndex={answers[currentQuestionIndex]}
                             index={currentQuestionIndex + 1}
                             total={questions.length}
                         />
