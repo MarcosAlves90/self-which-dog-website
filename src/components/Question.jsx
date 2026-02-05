@@ -64,14 +64,14 @@ export default function Question({
                     onClick={onPrev}
                     disabled={!hasPrev}
                 >
-                    Voltar
+                    Back
                 </button>
                 <button
                     className="c-btn"
                     onClick={onNext}
                     disabled={!canGoNext}
                 >
-                    Próxima
+                    Next
                 </button>
             </div>
         </article>
